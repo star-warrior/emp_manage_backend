@@ -1,0 +1,122 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["@franzmoca/opencode-lombok"],
+  // ---------------------------------------------------------------------
+  // MODEL
+  // Uncomment/edit if you want to pin a specific model for this project
+  // instead of using whatever is set globally.
+  // ---------------------------------------------------------------------
+  // "model": "anthropic/claude-sonnet-4-5",
+
+  // ---------------------------------------------------------------------
+  // LSP — Language Server Protocol
+  // "jdtls" (Eclipse JDT Language Server) is BUILT IN to opencode.
+  // Requirement per the docs: a Java SDK version 21+ must be installed
+  // and on PATH — you already have that (Java 21/26 in the stack).
+  // Setting "lsp": true turns on jdtls (and every other built-in LSP)
+  // automatically based on file extension, no extra install step needed.
+  // ---------------------------------------------------------------------
+  "lsp": true,
+
+  // If you later add Lombok (very common in Spring Boot projects for
+  // @Getter/@Setter/@Slf4j etc.) IntelliSense/diagnostics won't resolve
+  // generated methods unless jdtls is started with the Lombok javaagent.
+  // In that case, replace the line above with an override like this:
+
+   "lsp": {
+     "jdtls": {
+       "command": [
+         "jdtls",
+         "--jvm-arg=-javaagent:/absolute/path/to/lombok-1.18.42.jar"
+       ],
+       "extensions": [".java"]
+     }
+   },
+
+  // ---------------------------------------------------------------------
+  // FORMATTER
+  // "true" enables opencode's built-in formatters (e.g. prettier for any
+  // json/yaml/md files in the repo). Java itself has no built-in
+  // formatter, so if your pom.xml uses a formatter plugin (Spotless /
+  // fmt-maven-plugin / google-java-format) add a custom entry — example
+  // commented below assumes the Spotless Maven plugin.
+  // ---------------------------------------------------------------------
+  "formatter": true,
+
+  // "formatter": {
+  //   "spotless": {
+  //     "command": ["mvn", "-q", "spotless:apply"],
+  //     "extensions": [".java"]
+  //   }
+  // }
+
+  // ---------------------------------------------------------------------
+  // WATCHER
+  // Keep opencode's file watcher from churning on Maven build output and
+  // IDE metadata — this also keeps indexing/LSP diagnostics fast on a
+  // multi-module layered project (config/controller/dto/entity/... etc).
+  // ---------------------------------------------------------------------
+  "watcher": {
+    "ignore": [
+      "target/**",
+      "**/target/**",
+      ".mvn/**",
+      "*.class",
+      ".idea/**",
+      "*.iml",
+      ".git/**",
+      "logs/**",
+      "*.log"
+    ]
+  },
+
+  // ---------------------------------------------------------------------
+  // PERMISSIONS
+  // Let the agent read/edit files freely (this is a learning project and
+  // you'll be reviewing diffs anyway), but require explicit confirmation
+  // before it runs anything destructive or before it touches things
+  // outside the project (e.g. global Maven settings, git history rewrites).
+  // ---------------------------------------------------------------------
+  "permission": {
+    "edit": "allow",
+    "webfetch": "ask",
+    "bash": {
+      "*": "allow",
+      "mvn *": "allow",
+      "git push*": "ask",
+      "git reset*": "ask",
+      "rm *": "ask",
+      "rm -rf *": "deny"
+    }
+  },
+
+  // ---------------------------------------------------------------------
+  // CUSTOM SLASH COMMANDS
+  // Quick Maven workflows you'll use constantly while building the EMS.
+  // Type "/build", "/test", "/run", etc. in the TUI to trigger these.
+  // These are prompt templates — opencode still uses its bash tool to
+  // actually execute mvn, then reasons about the output for you.
+  // ---------------------------------------------------------------------
+  "command": {
+    "build": {
+      "description": "Compile the project with Maven and report errors",
+      "template": "Run `mvn clean compile` for this project. If it fails, show me the root cause of the first compilation error (not just the stack trace) and explain what's wrong before suggesting a fix."
+    },
+    "test": {
+      "description": "Run the Maven test suite and summarize results",
+      "template": "Run `mvn test` for this project. Summarize how many tests passed/failed, and for any failures explain the likely cause without immediately rewriting the code — ask me before making changes."
+    },
+    "verify": {
+      "description": "Run the full Maven verify lifecycle (build + tests + checks)",
+      "template": "Run `mvn clean verify` for this project and summarize the result, calling out anything the current build lifecycle is NOT yet checking (e.g. missing test coverage gates, static analysis) based on the PRD's non-functional requirements."
+    },
+    "run": {
+      "description": "Start the Spring Boot application",
+      "template": "Run `mvn spring-boot:run` for this project. If the application fails to start, walk me through the relevant stack trace and which layer (config/controller/service/repository) it points to, rather than just patching it."
+    },
+    "deps-check": {
+      "description": "Check for outdated/vulnerable Maven dependencies",
+      "template": "Run `mvn versions:display-dependency-updates` and summarize which dependencies have newer versions available, flagging any that look security-relevant (Spring Security, JJWT/JWT libs, Jackson)."
+    }
+  }
+}
