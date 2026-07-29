@@ -8,6 +8,7 @@ import ai.prama.empmanagement.repository.RoleRepository;
 import ai.prama.empmanagement.repository.UserRepository;
 import ai.prama.empmanagement.dto.UserDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserDto.Response createUser(UserDto.CreateRequest request) {
@@ -37,7 +39,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
-        user.setPassword(request.password());
+        user.setPassword(passwordEncoder.encode(request.password()));
         user.setDepartment(department);
         user.setRole(role);
         user.setActive(true);
