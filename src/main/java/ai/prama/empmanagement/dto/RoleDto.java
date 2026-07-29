@@ -1,4 +1,4 @@
-package ai.prama.empmanagement.service.dto;
+package ai.prama.empmanagement.dto;
 
 public class RoleDto {
 

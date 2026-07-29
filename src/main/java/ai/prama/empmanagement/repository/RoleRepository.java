@@ -1,7 +1,7 @@
 package ai.prama.empmanagement.repository;
 
 import ai.prama.empmanagement.entity.Role;
-import ai.prama.empmanagement.entity.Roles;
+import ai.prama.empmanagement.enums.Roles;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

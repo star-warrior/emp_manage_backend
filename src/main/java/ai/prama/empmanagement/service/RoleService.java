@@ -1,6 +1,6 @@
 package ai.prama.empmanagement.service;
 
-import ai.prama.empmanagement.service.dto.RoleDto;
+import ai.prama.empmanagement.dto.RoleDto;
 
 import java.util.List;
 

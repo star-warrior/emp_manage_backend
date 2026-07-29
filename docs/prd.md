@@ -88,7 +88,7 @@ Organizations require a secure platform to manage employees, departments, projec
 The system should:
 
 - Maintain employee records
-- Support multiple roles
+- Support single role per user
 - Assign employees to projects
 - Secure sensitive data
 - Log important system activities
@@ -247,7 +247,7 @@ So work can be tracked.
 
 As an administrator
 
-I want to assign multiple roles
+I want to assign a role
 
 So permissions are controlled.
 
@@ -276,7 +276,7 @@ Employee fields:
 - Password
 - Active Status
 - Department
-- Roles
+- Role
 - Projects
 - Created Date
 - Updated Date
@@ -482,7 +482,6 @@ Entities
 - Department
 - Role
 - Project
-- Employee_Role
 - Employee_Project
 - Audit_Log
 - Password_Reset_Token

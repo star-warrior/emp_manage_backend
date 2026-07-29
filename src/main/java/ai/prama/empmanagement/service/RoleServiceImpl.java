@@ -1,9 +1,9 @@
 package ai.prama.empmanagement.service;
 
 import ai.prama.empmanagement.entity.Role;
-import ai.prama.empmanagement.entity.Roles;
+import ai.prama.empmanagement.enums.Roles;
 import ai.prama.empmanagement.repository.RoleRepository;
-import ai.prama.empmanagement.service.dto.RoleDto;
+import ai.prama.empmanagement.dto.RoleDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

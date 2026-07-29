@@ -1,6 +1,6 @@
 package ai.prama.empmanagement.service;
 
-import ai.prama.empmanagement.service.dto.AuditLogDto;
+import ai.prama.empmanagement.dto.AuditLogDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -2,7 +2,7 @@ package ai.prama.empmanagement.service;
 
 import ai.prama.empmanagement.entity.Projects;
 import ai.prama.empmanagement.repository.ProjectsRepository;
-import ai.prama.empmanagement.service.dto.ProjectDto;
+import ai.prama.empmanagement.dto.ProjectDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

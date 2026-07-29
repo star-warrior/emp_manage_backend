@@ -6,13 +6,12 @@ import ai.prama.empmanagement.entity.User;
 import ai.prama.empmanagement.repository.DepartmentRepository;
 import ai.prama.empmanagement.repository.RoleRepository;
 import ai.prama.empmanagement.repository.UserRepository;
-import ai.prama.empmanagement.service.dto.UserDto;
+import ai.prama.empmanagement.dto.UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,14 +31,15 @@ public class UserServiceImpl implements UserService {
         Department department = departmentRepository.findById(request.departmentId())
                 .orElseThrow(() -> new IllegalArgumentException("Department not found with id " + request.departmentId()));
 
-        Set<Role> roles = roleRepository.findAllById(request.roleIds()).stream().collect(Collectors.toSet());
+        Role role = roleRepository.findById(request.roleId())
+                .orElseThrow(() -> new IllegalArgumentException("Role not found with id " + request.roleId()));
 
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
         user.setPassword(request.password());
         user.setDepartment(department);
-        user.setRoles(roles);
+        user.setRole(role);
         user.setActive(true);
 
         userRepository.save(user);
@@ -66,9 +66,10 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new IllegalArgumentException("Department not found with id " + request.departmentId()));
             user.setDepartment(department);
         }
-        if (request.roleIds() != null) {
-            Set<Role> roles = roleRepository.findAllById(request.roleIds()).stream().collect(Collectors.toSet());
-            user.setRoles(roles);
+        if (request.roleId() != null) {
+            Role role = roleRepository.findById(request.roleId())
+                    .orElseThrow(() -> new IllegalArgumentException("Role not found with id " + request.roleId()));
+            user.setRole(role);
         }
 
         userRepository.save(user);
@@ -101,7 +102,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public List<UserDto.Response> getUsersByRole(Long roleId) {
-        return userRepository.findByRoles_Id(roleId).stream()
+        return userRepository.findByRoleId(roleId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -119,9 +120,7 @@ public class UserServiceImpl implements UserService {
                 user.getEmail(),
                 user.isActive(),
                 user.getDepartment().getDepartmentName(),
-                user.getRoles().stream()
-                        .map(r -> r.getRoleName().name())
-                        .collect(Collectors.toSet()),
+                user.getRole().getRoleName().name(),
                 user.getCreated_at()
         );
     }

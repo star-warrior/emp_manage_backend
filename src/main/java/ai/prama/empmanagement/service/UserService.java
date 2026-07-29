@@ -1,6 +1,6 @@
 package ai.prama.empmanagement.service;
 
-import ai.prama.empmanagement.service.dto.UserDto;
+import ai.prama.empmanagement.dto.UserDto;
 
 import java.util.List;
 

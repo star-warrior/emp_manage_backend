@@ -1,4 +1,4 @@
-package ai.prama.empmanagement.entity;
+package ai.prama.empmanagement.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

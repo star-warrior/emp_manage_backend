@@ -1,0 +1,415 @@
+{
+  "info": {
+    "name": "EMS API",
+    "description": "Employee Management System — all REST API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "ems"
+  },
+  "item": [
+    {
+      "name": "User",
+      "item": [
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"securePass123\",\n  \"departmentId\": 1,\n  \"roleId\": 1\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/user",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user"]
+        }
+      },
+      "response": [
+        {
+          "name": "Created",
+          "status": "Created",
+          "code": 201,
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\n  \"id\": 1,\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"active\": true,\n  \"departmentName\": \"Engineering\",\n  \"roleName\": \"ADMIN\",\n  \"createdAt\": \"2026-07-29T12:00:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update User",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/v1/user/1",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user", "1"]
+        }
+      }
+    },
+    {
+      "name": "Delete User",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/user/1",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user", "1"]
+        }
+      }
+    },
+    {
+      "name": "Get User by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/user/1",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user", "1"]
+        }
+      }
+    },
+    {
+      "name": "Get All Users",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/user/all",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user", "all"]
+        }
+      }
+    },
+    {
+      "name": "Find Users by Department",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/user/department/1",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user", "department", "1"]
+        }
+      }
+    },
+    {
+      "name": "Find Users by Role",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/user/role/1",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user", "role", "1"]
+        }
+      }
+    },
+    {
+      "name": "Find Users by Project",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/v1/user/project/1",
+          "host": ["{{base_url}}"],
+          "path": ["v1", "user", "project", "1"]
+        }
+      }
+    }
+      ]
+    },
+    {
+      "name": "Project",
+      "item": [
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Project\",\n  \"status\": true,\n  \"description\": \"Project description\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/project",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "project"]
+            }
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Project\",\n  \"status\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/project/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "project", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/project/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "project", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Project by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/project/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "project", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/project/all",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "project", "all"]
+            }
+          }
+        },
+        {
+          "name": "Find Projects by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/project?status=active",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "project"],
+              "query": [
+                { "key": "status", "value": "active" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Log",
+      "item": [
+        {
+          "name": "Create Audit Log",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": 1,\n  \"departmentId\": 1,\n  \"projectId\": 1,\n  \"action\": \"LOGIN\",\n  \"description\": \"User logged into the system\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/audit-log",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-log"]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Log by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-log/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-log", "1"]
+            }
+          }
+        },
+        {
+          "name": "Find by Employee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-log/employee/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-log", "employee", "1"]
+            }
+          }
+        },
+        {
+          "name": "Find by Department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-log/department/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-log", "department", "1"]
+            }
+          }
+        },
+        {
+          "name": "Find by Project",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-log/project/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-log", "project", "1"]
+            }
+          }
+        },
+        {
+          "name": "Find by Action",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-log?action=LOGIN",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-log"],
+              "query": [
+                { "key": "action", "value": "LOGIN" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Find by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/audit-log?startDate=2026-01-01T00:00:00&endDate=2026-12-31T23:59:59",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "audit-log"],
+              "query": [
+                { "key": "startDate", "value": "2026-01-01T00:00:00" },
+                { "key": "endDate", "value": "2026-12-31T23:59:59" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Department",
+      "item": [
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/department",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "department"]
+            }
+          }
+        },
+        {
+          "name": "Get Department by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/department/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "department", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/department/all",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "department", "all"]
+            }
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/department/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "department", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/role/all",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "role", "all"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

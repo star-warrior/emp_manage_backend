@@ -8,7 +8,7 @@ import ai.prama.empmanagement.repository.AuditLogRepository;
 import ai.prama.empmanagement.repository.DepartmentRepository;
 import ai.prama.empmanagement.repository.ProjectsRepository;
 import ai.prama.empmanagement.repository.UserRepository;
-import ai.prama.empmanagement.service.dto.AuditLogDto;
+import ai.prama.empmanagement.dto.AuditLogDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,5 +1,6 @@
 package ai.prama.empmanagement.entity;
 
+import ai.prama.empmanagement.enums.Roles;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

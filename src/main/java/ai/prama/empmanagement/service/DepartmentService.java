@@ -1,6 +1,6 @@
 package ai.prama.empmanagement.service;
 
-import ai.prama.empmanagement.service.dto.DepartmentDto;
+import ai.prama.empmanagement.dto.DepartmentDto;
 
 import java.util.List;
 
