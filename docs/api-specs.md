@@ -1,3 +1,74 @@
+# Authentication Module
+
+**Base URL:** `http://localhost:8080/v1/auth`
+
+**Content-Type:** `application/json`
+
+All endpoints except `/v1/auth/**` and Swagger UI require an `Authorization: Bearer <token>` header.
+
+---
+
+## Endpoints
+
+### 1. Login
+
+```
+POST /v1/auth/login
+```
+
+Authenticates a user with email and password, returns a JWT bearer token.
+
+**Request Body:**
+
+```json
+{
+  "email": "john@example.com",
+  "password": "securePass123"
+}
+```
+
+**Field Constraints:**
+
+| Field    | Type   | Required | Constraints              |
+|----------|--------|----------|--------------------------|
+| email    | string | Yes      | Valid email, not blank   |
+| password | string | Yes      | Not blank                |
+
+**Response Body (200 OK):**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "tokenType": "Bearer",
+  "email": "john@example.com",
+  "role": "ROLE_ADMIN"
+}
+```
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| `200 OK` | Authentication successful, JWT returned |
+| `401 Unauthorized` | Invalid email or password |
+
+---
+
+### 2. Register (Create User)
+
+*See User Module — Create User (`POST /v1/user`). Registration is handled by the User API.*
+
+## Common Response Schema — `AuthDto.AuthResponse`
+
+| Field     | Type   | Description              |
+|-----------|--------|--------------------------|
+| token     | string | JWT access token         |
+| tokenType | string | Always `"Bearer"`        |
+| email     | string | Authenticated user email |
+| role      | string | User role (e.g. `ROLE_ADMIN`) |
+
+---
+
 # API Specification — User Module
 
 **Base URL:** `http://localhost:8080/v1/user`
@@ -837,6 +908,8 @@ The API uses standard HTTP status codes. All error responses follow the format:
 | Code | Meaning |
 |------|---------|
 | 400  | Bad Request — validation error or business rule violation |
+| 401  | Unauthorized — missing or invalid JWT token |
+| 403  | Forbidden — insufficient role permissions |
 | 404  | Resource not found |
 | 500  | Internal server error |
 

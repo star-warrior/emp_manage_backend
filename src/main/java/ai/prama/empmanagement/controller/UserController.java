@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = "Invalid input — validation error or duplicate email"),
         @ApiResponse(responseCode = "404", description = "Department or role not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<UserDto.Response> createNewUser(@Valid @RequestBody UserDto.CreateRequest user) {
         log.info("Creating new user with email: {}", user.email());
         UserDto.Response response = userService.createUser(user);
@@ -48,6 +50,7 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = "Invalid input — validation error or duplicate email"),
         @ApiResponse(responseCode = "404", description = "User, department, or role not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || #id == authentication.principal.id")
     public ResponseEntity<UserDto.Response> updateUser(@PathVariable long id, @Valid @RequestBody UserDto.UpdateRequest user) {
         log.info("Updating user with id: {}", id);
         UserDto.Response response = userService.updateUser(id, user);
@@ -60,6 +63,7 @@ public class UserController {
         @ApiResponse(responseCode = "204", description = "User deleted successfully"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteUser(@PathVariable long id) {
         log.info("Deleting user with id: {}", id);
         userService.removeUser(id);
@@ -72,6 +76,7 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "User found"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || #id == authentication.principal.id")
     public ResponseEntity<UserDto.Response> getUserById(@PathVariable long id) {
         log.info("Fetching user with id: {}", id);
         UserDto.Response response = userService.getUserById(id);
@@ -81,6 +86,7 @@ public class UserController {
     @GetMapping("/all")
     @Operation(summary = "Get all users", description = "Retrieves a list of all registered users")
     @ApiResponse(responseCode = "200", description = "List of users retrieved successfully")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDto.Response>> findAllUsers() {
         log.info("Fetching all users");
         List<UserDto.Response> users = userService.getAllUsers();
@@ -93,6 +99,7 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Department not found")
     })
+    @PreAuthorize("hasRole('ADMIN') || hasRole('MANAGER') && #id == authentication.principal.departmentId")
     public ResponseEntity<List<UserDto.Response>> findUsersByDept(@PathVariable long id) {
         log.info("Fetching users by department id: {}", id);
         List<UserDto.Response> users = userService.getUsersByDepartment(id);
@@ -105,6 +112,7 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Role not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDto.Response>> findUsersByRole(@PathVariable long id) {
         log.info("Fetching users by role id: {}", id);
         List<UserDto.Response> users = userService.getUsersByRole(id);
@@ -117,6 +125,7 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Project not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<UserDto.Response>> findUsersByProject(@PathVariable long id) {
         log.info("Fetching users by project id: {}", id);
         List<UserDto.Response> users = userService.getUsersByProject(id);

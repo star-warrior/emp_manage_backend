@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class DepartmentController {
         @ApiResponse(responseCode = "201", description = "Department created successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid input — validation error or duplicate name")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DepartmentDto.Response> createDepartment(@Valid @RequestBody DepartmentDto.CreateRequest request) {
         log.info("Creating new department: {}", request.name());
         DepartmentDto.Response response = departmentService.addDepartment(request);
@@ -45,6 +47,7 @@ public class DepartmentController {
         @ApiResponse(responseCode = "200", description = "Department found"),
         @ApiResponse(responseCode = "404", description = "Department not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasRole('EMPLOYEE') && #id == authentication.principal.departmentId")
     public ResponseEntity<DepartmentDto.Response> getDepartmentById(@PathVariable long id) {
         log.info("Fetching department with id: {}", id);
         DepartmentDto.Response response = departmentService.getDepartmentById(id);
@@ -54,10 +57,25 @@ public class DepartmentController {
     @GetMapping("/all")
     @Operation(summary = "Get all departments", description = "Retrieves a list of all departments")
     @ApiResponse(responseCode = "200", description = "List of departments retrieved successfully")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<DepartmentDto.Response>> getAllDepartments() {
         log.info("Fetching all departments");
         List<DepartmentDto.Response> responses = departmentService.getAllDepartments();
         return ResponseEntity.ok(responses);
+    }
+
+    @PatchMapping("/{id}")
+    @Operation(summary = "Update a department", description = "Partially updates a department's name by ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Department updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input — validation error or duplicate name"),
+        @ApiResponse(responseCode = "404", description = "Department not found")
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DepartmentDto.Response> updateDepartment(@PathVariable long id, @Valid @RequestBody DepartmentDto.UpdateRequest request) {
+        log.info("Updating department with id: {}", id);
+        DepartmentDto.Response response = departmentService.updateDepartment(id, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
@@ -66,6 +84,7 @@ public class DepartmentController {
         @ApiResponse(responseCode = "204", description = "Department deleted successfully"),
         @ApiResponse(responseCode = "404", description = "Department not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDepartment(@PathVariable long id) {
         log.info("Deleting department with id: {}", id);
         departmentService.removeDepartmentById(id);

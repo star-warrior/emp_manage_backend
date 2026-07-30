@@ -1,6 +1,8 @@
 package ai.prama.empmanagement.service;
 
 import ai.prama.empmanagement.entity.Department;
+import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
+import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.DepartmentRepository;
 import ai.prama.empmanagement.dto.DepartmentDto;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional
     public DepartmentDto.Response addDepartment(DepartmentDto.CreateRequest request) {
         if (departmentRepository.findByDepartmentName(request.name()).isPresent()) {
-            throw new IllegalArgumentException("Department " + request.name() + " already exists");
+            throw new DuplicateResourceException("Department " + request.name() + " already exists");
         }
 
         Department newDept = new Department();
@@ -29,12 +31,28 @@ public class DepartmentServiceImpl implements DepartmentService {
         return toResponse(newDept);
     }
 
-    public DepartmentDto.Response getDepartmentById(Long id) {
+    @Transactional
+    public DepartmentDto.Response updateDepartment(Long id, DepartmentDto.UpdateRequest request) {
         Department dept = departmentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Department not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + id));
+        if (request.name() != null) {
+            if (departmentRepository.findByDepartmentName(request.name()).isPresent()) {
+                throw new DuplicateResourceException("Department " + request.name() + " already exists");
+            }
+            dept.setDepartmentName(request.name());
+        }
+        departmentRepository.save(dept);
         return toResponse(dept);
     }
 
+    @Transactional(readOnly = true)
+    public DepartmentDto.Response getDepartmentById(Long id) {
+        Department dept = departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + id));
+        return toResponse(dept);
+    }
+
+    @Transactional(readOnly = true)
     public List<DepartmentDto.Response> getAllDepartments() {
         return departmentRepository.findAll().stream()
                 .map(this::toResponse)
@@ -44,7 +62,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional
     public void removeDepartmentById(Long id) {
         Department dept = departmentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Department not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + id));
         departmentRepository.delete(dept);
     }
 

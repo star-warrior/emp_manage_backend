@@ -3,6 +3,8 @@ package ai.prama.empmanagement.service;
 import ai.prama.empmanagement.entity.Department;
 import ai.prama.empmanagement.entity.Role;
 import ai.prama.empmanagement.entity.User;
+import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
+import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.DepartmentRepository;
 import ai.prama.empmanagement.repository.RoleRepository;
 import ai.prama.empmanagement.repository.UserRepository;
@@ -27,14 +29,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto.Response createUser(UserDto.CreateRequest request) {
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new IllegalArgumentException("Email " + request.email() + " already exists");
+            throw new DuplicateResourceException("Email " + request.email() + " already exists");
         }
 
         Department department = departmentRepository.findById(request.departmentId())
-                .orElseThrow(() -> new IllegalArgumentException("Department not found with id " + request.departmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + request.departmentId()));
 
         Role role = roleRepository.findById(request.roleId())
-                .orElseThrow(() -> new IllegalArgumentException("Role not found with id " + request.roleId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with id " + request.roleId()));
 
         User user = new User();
         user.setName(request.name());
@@ -51,13 +53,13 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto.Response updateUser(Long id, UserDto.UpdateRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
 
         if (request.name() != null) user.setName(request.name());
         if (request.email() != null) {
             userRepository.findByEmail(request.email()).ifPresent(existing -> {
                 if (existing.getId() != id) {
-                    throw new IllegalArgumentException("Email " + request.email() + " already exists");
+                    throw new DuplicateResourceException("Email " + request.email() + " already exists");
                 }
             });
             user.setEmail(request.email());
@@ -65,12 +67,12 @@ public class UserServiceImpl implements UserService {
         if (request.password() != null) user.setPassword(request.password());
         if (request.departmentId() != null) {
             Department department = departmentRepository.findById(request.departmentId())
-                    .orElseThrow(() -> new IllegalArgumentException("Department not found with id " + request.departmentId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + request.departmentId()));
             user.setDepartment(department);
         }
         if (request.roleId() != null) {
             Role role = roleRepository.findById(request.roleId())
-                    .orElseThrow(() -> new IllegalArgumentException("Role not found with id " + request.roleId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Role not found with id " + request.roleId()));
             user.setRole(role);
         }
 
@@ -81,34 +83,39 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void removeUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
         userRepository.delete(user);
     }
 
+    @Transactional(readOnly = true)
     public UserDto.Response getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
         return toResponse(user);
     }
 
+    @Transactional(readOnly = true)
     public List<UserDto.Response> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<UserDto.Response> getUsersByDepartment(Long departmentId) {
         return userRepository.findByDepartmentId(departmentId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<UserDto.Response> getUsersByRole(Long roleId) {
         return userRepository.findByRoleId(roleId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<UserDto.Response> getUsersByProject(Long projectId) {
         return userRepository.findByProjects_Id(projectId).stream()
                 .map(this::toResponse)
@@ -121,8 +128,8 @@ public class UserServiceImpl implements UserService {
                 user.getName(),
                 user.getEmail(),
                 user.isActive(),
-                user.getDepartment().getDepartmentName(),
-                user.getRole().getRoleName().name(),
+                user.getDepartment() != null ? user.getDepartment().getDepartmentName() : "Unknown",
+                user.getRole() != null ? user.getRole().getRoleName().name() : "ROLE_EMPLOYEE",
                 user.getCreated_at()
         );
     }

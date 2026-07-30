@@ -1,6 +1,8 @@
 package ai.prama.empmanagement.service;
 
 import ai.prama.empmanagement.entity.Projects;
+import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
+import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.ProjectsRepository;
 import ai.prama.empmanagement.dto.ProjectDto;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public ProjectDto.Response createProject(ProjectDto.CreateRequest request) {
         if (projectsRepository.findByName(request.name()).isPresent()) {
-            throw new IllegalArgumentException("Project " + request.name() + " already exists");
+            throw new DuplicateResourceException("Project " + request.name() + " already exists");
         }
 
         Projects project = new Projects();
@@ -34,7 +36,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public ProjectDto.Response updateProject(Long id, ProjectDto.UpdateRequest request) {
         Projects project = projectsRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + id));
 
         if (request.name() != null) project.setName(request.name());
         if (request.status() != null) project.setStatus(request.status());
@@ -47,22 +49,25 @@ public class ProjectServiceImpl implements ProjectService {
     @Transactional
     public void removeProject(Long id) {
         Projects project = projectsRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + id));
         projectsRepository.delete(project);
     }
 
+    @Transactional(readOnly = true)
     public ProjectDto.Response getProjectById(Long id) {
         Projects project = projectsRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + id));
         return toResponse(project);
     }
 
+    @Transactional(readOnly = true)
     public List<ProjectDto.Response> getAllProjects() {
         return projectsRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<ProjectDto.Response> getProjectsByStatus(boolean status) {
         return projectsRepository.findByStatus(status).stream()
                 .map(this::toResponse)

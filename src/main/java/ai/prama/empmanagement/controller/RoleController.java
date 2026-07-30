@@ -10,6 +10,7 @@ import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +30,7 @@ public class RoleController {
     @GetMapping("/all")
     @Operation(summary = "Get all roles", description = "Retrieves a list of all available roles")
     @ApiResponse(responseCode = "200", description = "List of roles retrieved successfully")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<RoleDto.Response>> getAllRoles() {
         log.info("Fetching all roles");
         List<RoleDto.Response> responses = roleService.getAllRoles();

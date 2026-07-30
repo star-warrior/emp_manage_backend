@@ -4,6 +4,7 @@ import ai.prama.empmanagement.entity.AuditLog;
 import ai.prama.empmanagement.entity.Department;
 import ai.prama.empmanagement.entity.Projects;
 import ai.prama.empmanagement.entity.User;
+import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.AuditLogRepository;
 import ai.prama.empmanagement.repository.DepartmentRepository;
 import ai.prama.empmanagement.repository.ProjectsRepository;
@@ -29,11 +30,11 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Transactional
     public AuditLogDto.Response createAuditLog(AuditLogDto.CreateRequest request) {
         User employee = userRepository.findById(request.employeeId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id " + request.employeeId()));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + request.employeeId()));
         Department department = departmentRepository.findById(request.departmentId())
-                .orElseThrow(() -> new IllegalArgumentException("Department not found with id " + request.departmentId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + request.departmentId()));
         Projects project = projectsRepository.findById(request.projectId())
-                .orElseThrow(() -> new IllegalArgumentException("Project not found with id " + request.projectId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + request.projectId()));
 
         AuditLog auditLog = new AuditLog();
         auditLog.setEmployee(employee);
@@ -46,36 +47,42 @@ public class AuditLogServiceImpl implements AuditLogService {
         return toResponse(auditLog);
     }
 
+    @Transactional(readOnly = true)
     public AuditLogDto.Response getAuditLogById(Long id) {
         AuditLog auditLog = auditLogRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("AuditLog not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("AuditLog not found with id " + id));
         return toResponse(auditLog);
     }
 
+    @Transactional(readOnly = true)
     public List<AuditLogDto.Response> getAuditLogsByEmployee(Long employeeId) {
         return auditLogRepository.findByEmployeeId(employeeId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<AuditLogDto.Response> getAuditLogsByDepartment(Long departmentId) {
         return auditLogRepository.findByDepartmentId(departmentId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<AuditLogDto.Response> getAuditLogsByProject(Long projectId) {
         return auditLogRepository.findByProjectId(projectId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<AuditLogDto.Response> getAuditLogsByAction(String action) {
         return auditLogRepository.findByAction(action).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<AuditLogDto.Response> getAuditLogsByDateRange(LocalDateTime start, LocalDateTime end) {
         return auditLogRepository.findByCreatedAtBetween(start, end).stream()
                 .map(this::toResponse)

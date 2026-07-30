@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ public class AuditLogController {
         @ApiResponse(responseCode = "400", description = "Invalid input"),
         @ApiResponse(responseCode = "404", description = "Employee, department, or project not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuditLogDto.Response> createAuditLog(@Valid @RequestBody AuditLogDto.CreateRequest request) {
         log.info("Creating audit log for employee id: {}", request.employeeId());
         AuditLogDto.Response response = auditLogService.createAuditLog(request);
@@ -47,6 +49,7 @@ public class AuditLogController {
         @ApiResponse(responseCode = "200", description = "Audit log found"),
         @ApiResponse(responseCode = "404", description = "Audit log not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<AuditLogDto.Response> getAuditLogById(@PathVariable long id) {
         log.info("Fetching audit log with id: {}", id);
         AuditLogDto.Response response = auditLogService.getAuditLogById(id);
@@ -59,6 +62,7 @@ public class AuditLogController {
         @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Employee not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByEmployee(@PathVariable long employeeId) {
         log.info("Fetching audit logs for employee id: {}", employeeId);
         List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByEmployee(employeeId);
@@ -71,6 +75,7 @@ public class AuditLogController {
         @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Department not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByDepartment(@PathVariable long departmentId) {
         log.info("Fetching audit logs for department id: {}", departmentId);
         List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByDepartment(departmentId);
@@ -83,6 +88,7 @@ public class AuditLogController {
         @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully"),
         @ApiResponse(responseCode = "404", description = "Project not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByProject(@PathVariable long projectId) {
         log.info("Fetching audit logs for project id: {}", projectId);
         List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByProject(projectId);
@@ -92,6 +98,7 @@ public class AuditLogController {
     @GetMapping(params = "action")
     @Operation(summary = "Find audit logs by action", description = "Retrieves all audit log entries matching an action type")
     @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByAction(@RequestParam String action) {
         log.info("Fetching audit logs with action: {}", action);
         List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByAction(action);
@@ -101,6 +108,7 @@ public class AuditLogController {
     @GetMapping(params = {"startDate", "endDate"})
     @Operation(summary = "Find audit logs by date range", description = "Retrieves all audit log entries within a date range")
     @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByDateRange(
             @RequestParam LocalDateTime startDate,
             @RequestParam LocalDateTime endDate) {

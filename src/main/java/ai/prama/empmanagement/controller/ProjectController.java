@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class ProjectController {
         @ApiResponse(responseCode = "201", description = "Project created successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid input — validation error or duplicate name")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectDto.Response> createNewProject(@Valid @RequestBody ProjectDto.CreateRequest project) {
         log.info("Creating new project: {}", project.name());
         ProjectDto.Response response = projectService.createProject(project);
@@ -48,6 +50,7 @@ public class ProjectController {
         @ApiResponse(responseCode = "400", description = "Invalid input"),
         @ApiResponse(responseCode = "404", description = "Project not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<ProjectDto.Response> updateProject(@PathVariable long id, @Valid @RequestBody ProjectDto.UpdateRequest project) {
         log.info("Updating project with id: {}", id);
         ProjectDto.Response response = projectService.updateProject(id, project);
@@ -60,6 +63,7 @@ public class ProjectController {
         @ApiResponse(responseCode = "204", description = "Project deleted successfully"),
         @ApiResponse(responseCode = "404", description = "Project not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProject(@PathVariable long id) {
         log.info("Deleting project with id: {}", id);
         projectService.removeProject(id);
@@ -72,6 +76,7 @@ public class ProjectController {
         @ApiResponse(responseCode = "200", description = "Project found"),
         @ApiResponse(responseCode = "404", description = "Project not found")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') || hasRole('EMPLOYEE') && #id in authentication.principal.user.projects.![id]")
     public ResponseEntity<ProjectDto.Response> findProjectById(@PathVariable long id) {
         log.info("Fetching project with id: {}", id);
         ProjectDto.Response response = projectService.getProjectById(id);
@@ -81,6 +86,7 @@ public class ProjectController {
     @GetMapping("/all")
     @Operation(summary = "Get all projects", description = "Retrieves a list of all projects")
     @ApiResponse(responseCode = "200", description = "List of projects retrieved successfully")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<List<ProjectDto.Response>> listAllProjects() {
         log.info("Fetching all projects");
         List<ProjectDto.Response> responses = projectService.getAllProjects();
@@ -93,6 +99,7 @@ public class ProjectController {
         @ApiResponse(responseCode = "200", description = "Projects retrieved successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid status value (must be 'active' or 'inactive')")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<List<ProjectDto.Response>> listProjectStatus(@RequestParam("status") String status) {
         log.info("Fetching projects with status: {}", status);
         List<ProjectDto.Response> responses = projectService.getProjectsByStatus(statusConverter.convert(status));

@@ -11,15 +11,17 @@ import java.util.List;
 public class UserPrincipal implements UserDetails {
 
     private final User user;
+    private final GrantedAuthority authority;
 
     public UserPrincipal(User user) {
         this.user = user;
+        String roleName = user.getRole() != null ? "ROLE_"+ user.getRole().getRoleName().name().toUpperCase() : "ROLE_EMPLOYEE";
+        this.authority = new SimpleGrantedAuthority(roleName);
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String roleName = "ROLE_" + user.getRole().getRoleName().name().toUpperCase();
-        return List.of(new SimpleGrantedAuthority(roleName));
+        return List.of(authority);
     }
 
     @Override
@@ -54,5 +56,13 @@ public class UserPrincipal implements UserDetails {
 
     public User getUser() {
         return user;
+    }
+
+    public long getId() {
+        return user.getId();
+    }
+
+    public long getDepartmentId() {
+        return user.getDepartment().getId();
     }
 }
