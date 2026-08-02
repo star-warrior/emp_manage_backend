@@ -1,10 +1,12 @@
 package ai.prama.empmanagement.service;
 
 import ai.prama.empmanagement.entity.Projects;
+import ai.prama.empmanagement.enums.AuditAction;
 import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
 import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.ProjectsRepository;
 import ai.prama.empmanagement.dto.ProjectDto;
+import ai.prama.empmanagement.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectsRepository projectsRepository;
+    private final AuditLogService auditLogService;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public ProjectDto.Response createProject(ProjectDto.CreateRequest request) {
@@ -30,6 +34,10 @@ public class ProjectServiceImpl implements ProjectService {
         project.setDescription(request.description());
 
         projectsRepository.save(project);
+
+        auditLogService.record(AuditAction.CREATE_PROJECT, securityUtils.currentUser(), null, project, null,
+                "Created project " + project.getName());
+
         return toResponse(project);
     }
 
@@ -43,6 +51,10 @@ public class ProjectServiceImpl implements ProjectService {
         if (request.description() != null) project.setDescription(request.description());
 
         projectsRepository.save(project);
+
+        auditLogService.record(AuditAction.UPDATE_PROJECT, securityUtils.currentUser(), null, project, null,
+                "Updated project " + project.getName());
+
         return toResponse(project);
     }
 
@@ -50,6 +62,8 @@ public class ProjectServiceImpl implements ProjectService {
     public void removeProject(Long id) {
         Projects project = projectsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + id));
+        auditLogService.record(AuditAction.DELETE_PROJECT, securityUtils.currentUser(), null, project, null,
+                "Deleted project " + project.getName());
         projectsRepository.delete(project);
     }
 

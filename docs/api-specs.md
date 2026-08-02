@@ -58,6 +58,72 @@ Authenticates a user with email and password, returns a JWT bearer token.
 
 *See User Module — Create User (`POST /v1/user`). Registration is handled by the User API.*
 
+---
+
+### 3. Forgot Password
+
+```
+POST /v1/auth/forgot-password
+```
+
+Sends a password reset token to the given email if an account exists. Always returns the same response whether or not the account exists to prevent user enumeration.
+
+**Request Body:**
+
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+**Field Constraints:**
+
+| Field | Type   | Required | Constraints          |
+|-------|--------|----------|----------------------|
+| email | string | Yes      | Valid email, not blank |
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| `204 No Content` | Reset email sent (token emailed asynchronously if account exists) |
+| `400 Bad Request` | Validation error |
+
+---
+
+### 4. Reset Password
+
+```
+POST /v1/auth/reset-password
+```
+
+Resets the password using a valid reset token received by email. The token is single-use and expires 15 minutes after it was issued.
+
+**Request Body:**
+
+```json
+{
+  "token": "550e8400-e29b-41d4-a716-446655440000",
+  "newPassword": "NewPass123"
+}
+```
+
+**Field Constraints:**
+
+| Field      | Type           | Required | Constraints                                            |
+|------------|----------------|----------|--------------------------------------------------------|
+| token      | string (UUID) | Yes      | Not null; must be a valid, unused, unexpired token     |
+| newPassword| string         | Yes      | Min 8 characters, must contain letters and numbers     |
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| `204 No Content` | Password reset successfully |
+| `400 Bad Request` | Validation error, or invalid/expired/used token |
+
+---
+
 ## Common Response Schema — `AuthDto.AuthResponse`
 
 | Field     | Type   | Description              |
@@ -524,51 +590,17 @@ Filters projects by status (`active` or `inactive`).
 
 **Base URL:** `http://localhost:8080/v1/audit-log`
 
+Audit logs are **generated automatically** by the system on every transactional write (create/update/delete) across User, Department, Project, and Role modules, plus login and password-reset events. There is no public create endpoint.
+
+**Supported actions:** `CREATE_USER`, `UPDATE_USER`, `DELETE_USER`, `CREATE_DEPARTMENT`, `UPDATE_DEPARTMENT`, `DELETE_DEPARTMENT`, `CREATE_PROJECT`, `UPDATE_PROJECT`, `DELETE_PROJECT`, `CREATE_ROLE`, `DELETE_ROLE`, `LOGIN`, `PASSWORD_RESET`.
+
+**Access:** `ADMIN` and `MANAGER` (read only).
+
 ---
 
 ## Endpoints
 
-### 1. Create Audit Log
-
-```
-POST /v1/audit-log
-```
-
-Records an audit log entry for an employee action.
-
-**Request Body:**
-
-```json
-{
-  "employeeId": 1,
-  "departmentId": 1,
-  "projectId": 1,
-  "action": "LOGIN",
-  "description": "User logged into the system"
-}
-```
-
-**Field Constraints:**
-
-| Field        | Type   | Required | Constraints                     |
-|-------------|--------|----------|----------------------------------|
-| employeeId  | long   | Yes      | Must reference existing user     |
-| departmentId| long   | Yes      | Must reference existing department |
-| projectId   | long   | Yes      | Must reference existing project  |
-| action      | string | Yes      | Not blank                        |
-| description | string | No       | —                                |
-
-**Responses:**
-
-| Status | Description |
-|--------|-------------|
-| `201 Created` | Audit log created successfully |
-| `400 Bad Request` | Invalid input |
-| `404 Not Found` | Employee, department, or project not found |
-
----
-
-### 2. Get Audit Log by ID
+### 1. Get Audit Log by ID
 
 ```
 GET /v1/audit-log/{id}
@@ -589,17 +621,31 @@ GET /v1/audit-log/{id}
 
 ---
 
-### 3. Find Audit Logs by Employee
+### 2. Get All Audit Logs
 
 ```
-GET /v1/audit-log/employee/{employeeId}
+GET /v1/audit-log/all
+```
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| `200 OK` | Audit logs retrieved |
+
+---
+
+### 3. Find Audit Logs by Actor
+
+```
+GET /v1/audit-log/actor/{actorId}
 ```
 
 **Path Parameters:**
 
-| Parameter  | Type | Description |
+| Parameter | Type | Description |
 |-----------|------|-------------|
-| employeeId | long | Employee ID |
+| actorId   | long | Actor (user) ID |
 
 **Responses:**
 
@@ -649,17 +695,17 @@ GET /v1/audit-log/project/{projectId}
 
 ---
 
-### 6. Find Audit Logs by Action
+### 6. Find Audit Logs by Role
 
 ```
-GET /v1/audit-log?action=LOGIN
+GET /v1/audit-log/role/{roleId}
 ```
 
-**Query Parameters:**
+**Path Parameters:**
 
-| Parameter | Type   | Required | Description |
-|-----------|--------|----------|-------------|
-| action    | string | Yes      | Action type |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| roleId    | long | Role ID |
 
 **Responses:**
 
@@ -669,7 +715,27 @@ GET /v1/audit-log?action=LOGIN
 
 ---
 
-### 7. Find Audit Logs by Date Range
+### 7. Find Audit Logs by Action
+
+```
+GET /v1/audit-log?action=CREATE_USER
+```
+
+**Query Parameters:**
+
+| Parameter | Type   | Required | Description |
+|-----------|--------|----------|-------------|
+| action    | string | Yes      | One of the supported audit actions |
+
+**Responses:**
+
+| Status | Description |
+|--------|-------------|
+| `200 OK` | Audit logs retrieved |
+
+---
+
+### 8. Find Audit Logs by Date Range
 
 ```
 GET /v1/audit-log?startDate=2026-01-01T00:00:00&endDate=2026-12-31T23:59:59
@@ -695,13 +761,15 @@ GET /v1/audit-log?startDate=2026-01-01T00:00:00&endDate=2026-12-31T23:59:59
 | Field          | Type           | Description                |
 |---------------|----------------|----------------------------|
 | id            | long           | Audit log ID               |
-| employeeId    | long           | Employee ID                |
-| employeeName  | string         | Employee name              |
-| departmentId  | long           | Department ID              |
+| actorId       | long           | Actor (user) ID            |
+| actorName     | string         | Actor name                 |
+| departmentId  | long           | Department ID (null if not applicable) |
 | departmentName| string         | Department name            |
-| projectId     | long           | Project ID                 |
+| projectId     | long           | Project ID (null if not applicable) |
 | projectName   | string         | Project name               |
-| action        | string         | Action type                |
+| roleId        | long           | Role ID (null if not applicable) |
+| roleName      | string         | Role name                  |
+| action        | string         | Audit action type          |
 | description   | string         | Action description         |
 | createdAt     | LocalDateTime  | Creation timestamp         |
 

@@ -1,15 +1,14 @@
 package ai.prama.empmanagement.service;
 
+import ai.prama.empmanagement.dto.AuditLogDto;
 import ai.prama.empmanagement.entity.AuditLog;
 import ai.prama.empmanagement.entity.Department;
 import ai.prama.empmanagement.entity.Projects;
+import ai.prama.empmanagement.entity.Role;
 import ai.prama.empmanagement.entity.User;
+import ai.prama.empmanagement.enums.AuditAction;
 import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.AuditLogRepository;
-import ai.prama.empmanagement.repository.DepartmentRepository;
-import ai.prama.empmanagement.repository.ProjectsRepository;
-import ai.prama.empmanagement.repository.UserRepository;
-import ai.prama.empmanagement.dto.AuditLogDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,25 +22,16 @@ import java.util.stream.Collectors;
 public class AuditLogServiceImpl implements AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
-    private final UserRepository userRepository;
-    private final DepartmentRepository departmentRepository;
-    private final ProjectsRepository projectsRepository;
 
     @Transactional
-    public AuditLogDto.Response createAuditLog(AuditLogDto.CreateRequest request) {
-        User employee = userRepository.findById(request.employeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + request.employeeId()));
-        Department department = departmentRepository.findById(request.departmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + request.departmentId()));
-        Projects project = projectsRepository.findById(request.projectId())
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id " + request.projectId()));
-
+    public AuditLogDto.Response record(AuditAction action, User actor, Department department, Projects project, Role role, String description) {
         AuditLog auditLog = new AuditLog();
-        auditLog.setEmployee(employee);
+        auditLog.setActor(actor);
         auditLog.setDepartment(department);
         auditLog.setProject(project);
-        auditLog.setAction(request.action());
-        auditLog.setDescription(request.description());
+        auditLog.setRole(role);
+        auditLog.setAction(action);
+        auditLog.setDescription(description);
 
         auditLogRepository.save(auditLog);
         return toResponse(auditLog);
@@ -55,8 +45,15 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public List<AuditLogDto.Response> getAuditLogsByEmployee(Long employeeId) {
-        return auditLogRepository.findByEmployeeId(employeeId).stream()
+    public List<AuditLogDto.Response> getAuditLogsByActor(Long actorId) {
+        return auditLogRepository.findByActorId(actorId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditLogDto.Response> getAllAuditLogs() {
+        return auditLogRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -76,7 +73,14 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public List<AuditLogDto.Response> getAuditLogsByAction(String action) {
+    public List<AuditLogDto.Response> getAuditLogsByRole(Long roleId) {
+        return auditLogRepository.findByRoleId(roleId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditLogDto.Response> getAuditLogsByAction(AuditAction action) {
         return auditLogRepository.findByAction(action).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -92,12 +96,14 @@ public class AuditLogServiceImpl implements AuditLogService {
     private AuditLogDto.Response toResponse(AuditLog auditLog) {
         return new AuditLogDto.Response(
                 auditLog.getId(),
-                auditLog.getEmployee().getId(),
-                auditLog.getEmployee().getName(),
-                auditLog.getDepartment().getId(),
-                auditLog.getDepartment().getDepartmentName(),
-                auditLog.getProject().getId(),
-                auditLog.getProject().getName(),
+                auditLog.getActor().getId(),
+                auditLog.getActor().getName(),
+                auditLog.getDepartment() != null ? auditLog.getDepartment().getId() : null,
+                auditLog.getDepartment() != null ? auditLog.getDepartment().getDepartmentName() : null,
+                auditLog.getProject() != null ? auditLog.getProject().getId() : null,
+                auditLog.getProject() != null ? auditLog.getProject().getName() : null,
+                auditLog.getRole() != null ? auditLog.getRole().getId() : null,
+                auditLog.getRole() != null ? auditLog.getRole().getRoleName().name() : null,
                 auditLog.getAction(),
                 auditLog.getDescription(),
                 auditLog.getCreatedAt()

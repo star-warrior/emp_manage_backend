@@ -1,5 +1,6 @@
 package ai.prama.empmanagement.entity;
 
+import ai.prama.empmanagement.enums.AuditAction;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,19 +20,24 @@ public class AuditLog {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private User employee;
+    @JoinColumn(name = "actor_id", nullable = false)
+    private User actor;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "department_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
     private Department department;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "project_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
     private Projects project;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
+    @Enumerated(EnumType.STRING)
     @Column(length = 100, nullable = false)
-    private String action;
+    private AuditAction action;
 
     @Column(columnDefinition = "text")
     private String description;

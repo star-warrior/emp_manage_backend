@@ -3,12 +3,14 @@ package ai.prama.empmanagement.service;
 import ai.prama.empmanagement.entity.Department;
 import ai.prama.empmanagement.entity.Role;
 import ai.prama.empmanagement.entity.User;
+import ai.prama.empmanagement.enums.AuditAction;
 import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
 import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.DepartmentRepository;
 import ai.prama.empmanagement.repository.RoleRepository;
 import ai.prama.empmanagement.repository.UserRepository;
 import ai.prama.empmanagement.dto.UserDto;
+import ai.prama.empmanagement.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class UserServiceImpl implements UserService {
     private final DepartmentRepository departmentRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public UserDto.Response createUser(UserDto.CreateRequest request) {
@@ -47,6 +51,11 @@ public class UserServiceImpl implements UserService {
         user.setActive(true);
 
         userRepository.save(user);
+
+        auditLogService.record(AuditAction.CREATE_USER, securityUtils.currentUser(), department, null, role,
+                "Created user " + user.getName() + " (" + user.getEmail() + ") in department " + department.getDepartmentName()
+                        + " with role " + role.getRoleName().name());
+
         return toResponse(user);
     }
 
@@ -77,6 +86,10 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepository.save(user);
+
+        auditLogService.record(AuditAction.UPDATE_USER, securityUtils.currentUser(), user.getDepartment(), null, user.getRole(),
+                "Updated user " + user.getName() + " (" + user.getEmail() + ")");
+
         return toResponse(user);
     }
 
@@ -84,6 +97,8 @@ public class UserServiceImpl implements UserService {
     public void removeUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+        auditLogService.record(AuditAction.DELETE_USER, securityUtils.currentUser(), user.getDepartment(), null, user.getRole(),
+                "Deleted user " + user.getName() + " (" + user.getEmail() + ")");
         userRepository.delete(user);
     }
 

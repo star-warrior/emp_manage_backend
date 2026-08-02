@@ -1,6 +1,7 @@
 package ai.prama.empmanagement.exception;
 
 import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
+import ai.prama.empmanagement.exception.custom.InvalidResetTokenException;
 import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setMsg(ex.getMessage());
+        error.setStatus(HttpStatus.BAD_REQUEST);
+        error.setTimestamp(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidResetTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidResetToken(InvalidResetTokenException ex) {
         ErrorResponse error = new ErrorResponse();
         error.setMsg(ex.getMessage());
         error.setStatus(HttpStatus.BAD_REQUEST);

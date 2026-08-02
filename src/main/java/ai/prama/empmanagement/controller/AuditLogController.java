@@ -1,17 +1,16 @@
 package ai.prama.empmanagement.controller;
 
 import ai.prama.empmanagement.dto.AuditLogDto;
+import ai.prama.empmanagement.enums.AuditAction;
 import ai.prama.empmanagement.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,20 +28,6 @@ public class AuditLogController {
 
     private final AuditLogService auditLogService;
 
-    @PostMapping
-    @Operation(summary = "Create an audit log entry", description = "Records an audit log for an employee action")
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Audit log created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input"),
-        @ApiResponse(responseCode = "404", description = "Employee, department, or project not found")
-    })
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AuditLogDto.Response> createAuditLog(@Valid @RequestBody AuditLogDto.CreateRequest request) {
-        log.info("Creating audit log for employee id: {}", request.employeeId());
-        AuditLogDto.Response response = auditLogService.createAuditLog(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
     @GetMapping("/{id}")
     @Operation(summary = "Get audit log by ID", description = "Retrieves a single audit log entry by its ID")
     @ApiResponses({
@@ -56,16 +41,26 @@ public class AuditLogController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/employee/{employeeId}")
-    @Operation(summary = "Find audit logs by employee", description = "Retrieves all audit log entries for an employee")
+    @GetMapping("/all")
+    @Operation(summary = "Get all audit logs", description = "Retrieves all audit log entries")
+    @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<List<AuditLogDto.Response>> getAllAuditLogs() {
+        log.info("Fetching all audit logs");
+        List<AuditLogDto.Response> responses = auditLogService.getAllAuditLogs();
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/actor/{actorId}")
+    @Operation(summary = "Find audit logs by actor", description = "Retrieves all audit log entries performed by an actor")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully"),
-        @ApiResponse(responseCode = "404", description = "Employee not found")
+        @ApiResponse(responseCode = "404", description = "Actor not found")
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByEmployee(@PathVariable long employeeId) {
-        log.info("Fetching audit logs for employee id: {}", employeeId);
-        List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByEmployee(employeeId);
+    public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByActor(@PathVariable long actorId) {
+        log.info("Fetching audit logs for actor id: {}", actorId);
+        List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByActor(actorId);
         return ResponseEntity.ok(responses);
     }
 
@@ -95,11 +90,24 @@ public class AuditLogController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/role/{roleId}")
+    @Operation(summary = "Find audit logs by role", description = "Retrieves all audit log entries for a role")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Role not found")
+    })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByRole(@PathVariable long roleId) {
+        log.info("Fetching audit logs for role id: {}", roleId);
+        List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByRole(roleId);
+        return ResponseEntity.ok(responses);
+    }
+
     @GetMapping(params = "action")
     @Operation(summary = "Find audit logs by action", description = "Retrieves all audit log entries matching an action type")
     @ApiResponse(responseCode = "200", description = "Audit logs retrieved successfully")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByAction(@RequestParam String action) {
+    public ResponseEntity<List<AuditLogDto.Response>> getAuditLogsByAction(@RequestParam AuditAction action) {
         log.info("Fetching audit logs with action: {}", action);
         List<AuditLogDto.Response> responses = auditLogService.getAuditLogsByAction(action);
         return ResponseEntity.ok(responses);

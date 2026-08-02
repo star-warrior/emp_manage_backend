@@ -1,32 +1,22 @@
 package ai.prama.empmanagement.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import ai.prama.empmanagement.enums.AuditAction;
+
 import java.time.LocalDateTime;
 
 public class AuditLogDto {
 
-    public record CreateRequest(
-        @NotNull(message = "Employee is required")
-        Long employeeId,
-        @NotNull(message = "Department is required")
-        Long departmentId,
-        @NotNull(message = "Project is required")
-        Long projectId,
-        @NotBlank(message = "Action is required")
-        String action,
-        String description
-    ) {}
-
     public record Response(
         Long id,
-        Long employeeId,
-        String employeeName,
+        Long actorId,
+        String actorName,
         Long departmentId,
         String departmentName,
         Long projectId,
         String projectName,
-        String action,
+        Long roleId,
+        String roleName,
+        AuditAction action,
         String description,
         LocalDateTime createdAt
     ) {}

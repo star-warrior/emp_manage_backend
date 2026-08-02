@@ -1,11 +1,13 @@
 package ai.prama.empmanagement.service;
 
 import ai.prama.empmanagement.entity.Role;
+import ai.prama.empmanagement.enums.AuditAction;
 import ai.prama.empmanagement.enums.Roles;
 import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
 import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.RoleRepository;
 import ai.prama.empmanagement.dto.RoleDto;
+import ai.prama.empmanagement.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
+    private final AuditLogService auditLogService;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public RoleDto.Response addRole(RoleDto.CreateRequest request) {
@@ -31,6 +35,9 @@ public class RoleServiceImpl implements RoleService {
         newRole.setRoleName(roleEnum);
         roleRepository.save(newRole);
 
+        auditLogService.record(AuditAction.CREATE_ROLE, securityUtils.currentUser(), null, null, newRole,
+                "Created role " + newRole.getRoleName().name());
+
         return toResponse(newRole);
     }
 
@@ -38,6 +45,8 @@ public class RoleServiceImpl implements RoleService {
     public void removeRole(Long id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id " + id));
+        auditLogService.record(AuditAction.DELETE_ROLE, securityUtils.currentUser(), null, null, role,
+                "Deleted role " + role.getRoleName().name());
         roleRepository.delete(role);
     }
 
