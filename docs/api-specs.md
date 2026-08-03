@@ -66,7 +66,7 @@ Authenticates a user with email and password, returns a JWT bearer token.
 POST /v1/auth/forgot-password
 ```
 
-Sends a password reset token to the given email if an account exists. Always returns the same response whether or not the account exists to prevent user enumeration.
+Sends a password reset email containing a reset link to the frontend if an account exists. The link points to `{app.frontend-url}/reset-password?token=<token>` and includes the reset token as a query parameter. Always returns the same response whether or not the account exists to prevent user enumeration.
 
 **Request Body:**
 
@@ -86,7 +86,7 @@ Sends a password reset token to the given email if an account exists. Always ret
 
 | Status | Description |
 |--------|-------------|
-| `204 No Content` | Reset email sent (token emailed asynchronously if account exists) |
+| `204 No Content` | Reset email sent (reset link emailed asynchronously if account exists) |
 | `400 Bad Request` | Validation error |
 
 ---
@@ -97,7 +97,7 @@ Sends a password reset token to the given email if an account exists. Always ret
 POST /v1/auth/reset-password
 ```
 
-Resets the password using a valid reset token received by email. The token is single-use and expires 15 minutes after it was issued.
+Resets the password using a valid reset token received by email. The token is delivered to the user via the reset link (`{app.frontend-url}/reset-password?token=<token>`); the frontend parses the `token` query parameter and sends it here with the new password. The token is single-use and expires 15 minutes after it was issued.
 
 **Request Body:**
 

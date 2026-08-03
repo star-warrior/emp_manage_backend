@@ -8,6 +8,7 @@ import ai.prama.empmanagement.exception.custom.InvalidResetTokenException;
 import ai.prama.empmanagement.repository.PasswordResetTokenRepository;
 import ai.prama.empmanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,9 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     @Transactional
     public void requestPasswordReset(PasswordResetDto.ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.email()).orElse(null);
@@ -42,12 +46,28 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         token.setExpiresAt(LocalDateTime.now().plusMinutes(TOKEN_EXPIRY_MINUTES));
         tokenRepository.save(token);
 
+        String resetUrl = frontendUrl + "/reset-password?token=" + token.getToken();
+
         String body = """
             <h1>Password Reset</h1>
             <p>You requested a password reset. Use the following token to reset your password within 15 minutes:</p>
-            <p><strong>%s</strong></p>
+                <p>
+                        <a href="%s"
+                           style="
+                                display:inline-block;
+                                padding:12px 24px;
+                                background:#2563eb;
+                                color:white;
+                                text-decoration:none;
+                                border-radius:6px;
+                                font-weight:bold;">
+                            Reset Password
+                        </a>
+                    </p>
             <p>If you did not request this, you can safely ignore this email.</p>
-            """.formatted(token.getToken());
+                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                    <p>%s</p>
+            """.formatted(resetUrl,resetUrl);
 
         emailService.sendMail(user.getEmail(), "Password Reset", body);
     }

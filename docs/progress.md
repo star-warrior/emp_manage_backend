@@ -29,7 +29,7 @@
 - **ProjectService** — `createProject`, `updateProject`, `removeProject`, `getProjectById`, `getAllProjects`, `getProjectsByStatus`
 - **AuditLogService** — `record`, `getAuditLogById`, `getAllAuditLogs`, `getAuditLogsByActor`, `getAuditLogsByDepartment`, `getAuditLogsByProject`, `getAuditLogsByRole`, `getAuditLogsByAction`, `getAuditLogsByDateRange`
 - **EmailService** — `sendMail(to, subject, htmlBody)` — async HTML email sending
-- **PasswordResetService** — `requestPasswordReset`, `resetPassword` — token-based password reset flow
+- **PasswordResetService** — `requestPasswordReset`, `resetPassword` — token-based password reset flow; emails a frontend reset link
 
 ### DTOs (`dto/`)
 - **RoleDto** — `CreateRequest`, `Response`
@@ -90,8 +90,9 @@
 - **DepartmentServiceImpl** — duplicate name on update now throws `DuplicateResourceException` (was `IllegalArgumentException`)
 
 ### Password Reset Flow
-- **`POST /v1/auth/forgot-password`** — generates a 15-minute UUID reset token, invalidates any prior tokens, and emails the token asynchronously (`@Async` via `@EnableAsync`); always returns `204` even for unknown emails to prevent user enumeration
+- **`POST /v1/auth/forgot-password`** — generates a 15-minute UUID reset token, invalidates any prior tokens, and emails a reset link to the frontend reset-password page asynchronously (`@Async` via `@EnableAsync`). The link is `{app.frontend-url}/reset-password?token=<token>`, where `app.frontend-url` is configurable in `application.properties`; the frontend extracts the `token` query parameter for the reset call. Always returns `204` even for unknown emails to prevent user enumeration
 - **`POST /v1/auth/reset-password`** — validates the token (exists, unused, unexpired), BCrypt-encodes the new password, marks the token used, and purges remaining tokens; invalid/expired/used tokens throw `InvalidResetTokenException` (400)
+- **Config** — `app.frontend-url` property (default `http://localhost:5173` in `application.properties`) defines the frontend base URL used to build the reset link
 - **`EmailService`/`EmailServiceImpl`** — `sendMail(to, subject, htmlBody)` builds a `MimeMessage` and sends async; SMTP failures are caught and logged so the request still succeeds
 - **`EmailService`** interface refactored away from returning `ResponseEntity` — clean `void` abstraction
 
