@@ -7,7 +7,7 @@
 - Dependencies: Web, Security, Data JPA, PostgreSQL, Validation, Mail, JWT, Lombok, Swagger, DevTools, Testing
 
 ### DB Entities (7)
-- **User** — id, name, email, password, active, timestamps; `@ManyToOne` Department, `@ManyToOne` Role, `@ManyToMany` Projects
+- **User** — id, name, email, password, active, `login_method` (enum: `GOOGLE`, `MICROSOFT`, `LOCAL`), `login_id` (provider subject), timestamps; `@ManyToOne` Department, `@ManyToOne` Role, `@ManyToMany` Projects
 - **Role** — id, role_name (enum: EMPLOYEE, MANAGER, ADMIN)
 - **Department** — id, department_name
 - **Projects** — id, name, description, status, timestamps
@@ -34,14 +34,14 @@
 ### DTOs (`dto/`)
 - **RoleDto** — `CreateRequest`, `Response`
 - **DepartmentDto** — `CreateRequest`, `UpdateRequest`, `Response` (with validation)
-- **UserDto** — `CreateRequest`, `UpdateRequest`, `Response` (with validation)
+- **UserDto** — `CreateRequest` (now includes `loginMethod`: `LOCAL`/`GOOGLE`/`MICROSOFT`; password required only for `LOCAL`), `UpdateRequest`, `Response` (with validation)
 - **ProjectDto** — `CreateRequest`, `UpdateRequest`, `Response` (with validation)
 - **AuditLogDto** — `Response` (with validation)
 - **AuthDto** — `LoginRequest`, `AuthResponse`
 - **PasswordResetDto** — `ForgotPasswordRequest`, `ResetPasswordRequest` (with validation)
 
 ### Controllers (`controller/`)
-- **AuthenticationController** — `POST /v1/auth/login` returns JWT; `POST /v1/auth/forgot-password`; `POST /v1/auth/reset-password`; `@Tag`, `@Operation`, logging
+- **AuthenticationController** — `POST /v1/auth/login` returns JWT (accounts provisioned for `GOOGLE`/`MICROSOFT` are rejected with `400 This account uses <METHOD> login.`); `POST /v1/auth/forgot-password`; `POST /v1/auth/reset-password`; `@Tag`, `@Operation`, logging
 - **UserController** — CRUD + filter by department/role/project; `@Tag`, `@Operation`, logging
 - **ProjectController** — CRUD + filter by status; `@Tag`, `@Operation`, logging
 - **DepartmentController** — CRUD (including `updateDepartment`); `@Tag`, `@Operation`, logging
@@ -96,6 +96,16 @@
 - **`EmailService`/`EmailServiceImpl`** — `sendMail(to, subject, htmlBody)` builds a `MimeMessage` and sends async; SMTP failures are caught and logged so the request still succeeds
 - **`EmailService`** interface refactored away from returning `ResponseEntity` — clean `void` abstraction
 
+### OAuth2 Login (Google & Microsoft)
+- **Flow** — no self-signup; users are provisioned by an ADMIN/MANAGER with a `loginMethod` of `LOCAL`, `GOOGLE`, or `MICROSOFT` (`UserDto.CreateRequest.loginMethod`). OAuth logins are browser-redirect flows.
+- **`CustomOAuth2Service`** (`security/CustomOAuth2Service`) — extends `DefaultOAuth2UserService`; resolves the user by provider email (`email`, or `preferred_username` for Microsoft), then **rejects** the login (`OAuth2AuthenticationException`) if the account does not exist, was provisioned with a different `loginMethod`, or is inactive. It **never creates accounts** and performs no DB writes.
+- **`OAuth2LoginSuccessHandler`** (`security/OAuth2LoginSuccessHandler`) — issues a JWT via `JwtService` and redirects to `{app.frontend-redirect-url}?token=<jwt>`.
+- **`OAuth2LoginFailureHandler`** (`security/OAuth2LoginFailureHandler`) — redirects to `{app.frontend-redirect-url}?error=<url-encoded reason>`.
+- **SecurityConfig** — `.oauth2Login(...)` wired with `userInfoEndpoint().userService(customOAuth2Service)`, `successHandler(...)`, and `failureHandler(...)`; stateless sessions; provider keys not needed for `/oauth2/**` to be reachable.
+- **Endpoints** — initiation: `GET /oauth2/authorization/google`, `GET /oauth2/authorization/microsoft`; callback: `GET /login/oauth2/code/{registrationId}` (registered redirect URI per provider).
+- **Config** — Google registration (real keys) and Microsoft registration + provider block (`login.microsoftonline.com/common/oauth2/v2.0` authorize/token URIs, Graph `/oidc/userinfo`, `user-name-attribute=sub`); Microsoft client-id/secret are placeholders pending key setup. `app.frontend-redirect-url=http://localhost:5173/oauth2/redirect`.
+- **Enum storage** — `LoginMethod` persisted with `@Enumerated(EnumType.STRING)`; `login_id` column added to `users`.
+
 ### Automatic Audit Logging
 - **`enums/AuditAction`** — `CREATE_USER, UPDATE_USER, DELETE_USER, CREATE_DEPARTMENT, UPDATE_DEPARTMENT, DELETE_DEPARTMENT, CREATE_PROJECT, UPDATE_PROJECT, DELETE_PROJECT, CREATE_ROLE, DELETE_ROLE, LOGIN, PASSWORD_RESET`
 - **`AuditLog.record(action, actor, department, project, role, description)`** — system-generated audit entries; called inside every `@Transactional` write path so the log commits/rolls back with the operation
@@ -111,3 +121,4 @@
 
 ## Not Yet Implemented
 - Docker configuration
+- Microsoft OAuth client-id/client-secret (currently placeholders in `application.properties`)

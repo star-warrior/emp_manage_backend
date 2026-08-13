@@ -2,7 +2,10 @@ package ai.prama.empmanagement.controller;
 
 import ai.prama.empmanagement.dto.AuthDto;
 import ai.prama.empmanagement.dto.PasswordResetDto;
+import ai.prama.empmanagement.entity.User;
 import ai.prama.empmanagement.enums.AuditAction;
+import ai.prama.empmanagement.enums.LoginMethod;
+import ai.prama.empmanagement.repository.UserRepository;
 import ai.prama.empmanagement.security.JwtService;
 import ai.prama.empmanagement.security.UserPrincipal;
 import ai.prama.empmanagement.service.AuditLogService;
@@ -18,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +41,7 @@ public class AuthenticationController {
     private final JwtService jwtService;
     private final PasswordResetService passwordResetService;
     private final AuditLogService auditLogService;
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     @Operation(summary = "Authenticate user", description = "Authenticates with email and password, returns a JWT token")
@@ -44,8 +49,14 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "200", description = "Authentication successful"),
         @ApiResponse(responseCode = "401", description = "Invalid email or password")
     })
-    public ResponseEntity<AuthDto.AuthResponse> login(@Valid @RequestBody AuthDto.LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody AuthDto.LoginRequest request) {
         log.info("Login attempt for email: {}", request.email());
+
+        User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new BadCredentialsException("Invalid Credentials"));
+
+        if (user.getLoginMethod() != LoginMethod.LOCAL && user.getLoginMethod() != null) {
+            return ResponseEntity.badRequest().body("This account uses " + user.getLoginMethod() + " login.");
+        }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password()));

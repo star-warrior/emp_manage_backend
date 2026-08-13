@@ -105,6 +105,38 @@
       ]
     },
     {
+      "name": "OAuth",
+      "description": "Browser-redirect OAuth2 flows (Google / Microsoft). Requires a user pre-provisioned with the matching loginMethod (GOOGLE / MICROSOFT). Send in a browser: on success the frontend receives ?token=<jwt>, on failure ?error=<reason>.",
+      "item": [
+        {
+          "name": "Google Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/oauth2/authorization/google",
+              "host": ["{{base_url}}"],
+              "path": ["oauth2", "authorization", "google"]
+            }
+          }
+        },
+        {
+          "name": "Microsoft Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/oauth2/authorization/microsoft",
+              "host": ["{{base_url}}"],
+              "path": ["oauth2", "authorization", "microsoft"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "User",
       "item": [
     {
@@ -117,7 +149,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"securePass123\",\n  \"departmentId\": 1,\n  \"roleId\": 1\n}",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"securePass123\",\n  \"departmentId\": 1,\n  \"roleId\": 1,\n  \"loginMethod\": \"LOCAL\"\n}",
           "options": { "raw": { "language": "json" } }
         },
         "url": {

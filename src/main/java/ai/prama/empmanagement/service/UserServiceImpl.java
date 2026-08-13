@@ -4,6 +4,7 @@ import ai.prama.empmanagement.entity.Department;
 import ai.prama.empmanagement.entity.Role;
 import ai.prama.empmanagement.entity.User;
 import ai.prama.empmanagement.enums.AuditAction;
+import ai.prama.empmanagement.enums.LoginMethod;
 import ai.prama.empmanagement.exception.custom.DuplicateResourceException;
 import ai.prama.empmanagement.exception.custom.ResourceNotFoundException;
 import ai.prama.empmanagement.repository.DepartmentRepository;
@@ -45,10 +46,17 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
         user.setDepartment(department);
         user.setRole(role);
         user.setActive(true);
+        user.setLoginMethod(request.loginMethod());
+
+        if (request.loginMethod() == LoginMethod.LOCAL) {
+            if(request.password() == null || request.password().length() < 8) {
+                throw new IllegalArgumentException("Password must be greater than 8 characters.");
+            }
+            user.setPassword(passwordEncoder.encode(request.password()));
+        }
 
         userRepository.save(user);
 

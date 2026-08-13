@@ -30,6 +30,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final PasswordEncoder passwordEncoder;
+    private final CustomOAuth2Service customOAuth2Service;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
@@ -51,8 +54,14 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v1/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/v1/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/v1/oauth/**").permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2.
+                        userInfoEndpoint(userInfo -> userInfo.
+                                userService(customOAuth2Service))
+                        .successHandler(oAuth2LoginSuccessHandler)
+                        .failureHandler(oAuth2LoginFailureHandler)
                 )
                 .authenticationProvider(authenticationProvider())
                 .exceptionHandling(ex -> ex

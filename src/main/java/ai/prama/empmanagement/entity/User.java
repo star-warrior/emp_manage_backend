@@ -1,5 +1,6 @@
 package ai.prama.empmanagement.entity;
 
+import ai.prama.empmanagement.enums.LoginMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,7 +28,14 @@ public class User {
     @Column(unique = true, nullable =false)
     private  String email;
 
+    @Column(nullable = true)
     private String password;
+
+    @Column(name = "login_method")
+    @Enumerated(EnumType.STRING)
+    private LoginMethod loginMethod;
+
+    private String loginId;
 
     @CreationTimestamp
     @Column(updatable = false)

@@ -1,5 +1,6 @@
 package ai.prama.empmanagement.security;
 
+import ai.prama.empmanagement.enums.LoginMethod;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -23,12 +24,14 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
     
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserPrincipal userDetails) {
         String role = userDetails.getAuthorities().iterator().next().getAuthority();
+        LoginMethod loginMethod = userDetails.getLoginMethod();
         
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("role", role)
+                .claim("login_method", loginMethod)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSigninKey())

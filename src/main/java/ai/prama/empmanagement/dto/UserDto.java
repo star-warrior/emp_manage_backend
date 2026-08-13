@@ -1,5 +1,6 @@
 package ai.prama.empmanagement.dto;
 
+import ai.prama.empmanagement.enums.LoginMethod;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -14,13 +15,14 @@ public class UserDto {
         @NotBlank(message = "Email is required")
         @Email(message = "Email must be valid")
         String email,
-        @NotBlank(message = "Password is required")
-        @Size(min = 8, message = "Password must be at least 8 characters")
+
         String password,
         @NotNull(message = "Department is required")
         Long departmentId,
         @NotNull(message = "Role is required")
-        Long roleId
+        Long roleId,
+        @NotNull(message = "Login Method Is required")
+        LoginMethod loginMethod
     ) {}
 
     public record UpdateRequest(

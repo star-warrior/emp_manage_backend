@@ -50,6 +50,7 @@ Authenticates a user with email and password, returns a JWT bearer token.
 | Status | Description |
 |--------|-------------|
 | `200 OK` | Authentication successful, JWT returned |
+| `400 Bad Request` | Account provisioned for OAuth login — plain-text body: `This account uses GOOGLE login.` (or `MICROSOFT`) |
 | `401 Unauthorized` | Invalid email or password |
 
 ---
@@ -161,7 +162,8 @@ Creates a new user with department and role assignments.
   "email": "john@example.com",
   "password": "securePass123",
   "departmentId": 1,
-  "roleId": 1
+  "roleId": 1,
+  "loginMethod": "LOCAL"
 }
 ```
 
@@ -171,16 +173,19 @@ Creates a new user with department and role assignments.
 |-------------|-------------|----------|------------------------------------|
 | name        | string      | Yes      | Not blank                          |
 | email       | string      | Yes      | Valid email, not blank             |
-| password    | string      | Yes      | Min 8 characters                   |
+| password    | string      | Conditional | Min 8 characters; required only when `loginMethod` is `LOCAL`, ignored otherwise |
 | departmentId| long        | Yes      | Must reference an existing department |
 | roleId      | long        | Yes      | Must reference an existing role |
+| loginMethod | string      | Yes      | One of `LOCAL`, `GOOGLE`, `MICROSOFT` (case-insensitive) |
+
+Users are **provisioned by an ADMIN/MANAGER** — there is no self-signup. For `GOOGLE`/`MICROSOFT` accounts no password is stored; authentication happens via the OAuth provider (see the OAuth2 module below). `loginMethod` is fixed at creation and cannot be changed via `PATCH`.
 
 **Responses:**
 
 | Status | Description |
 |--------|-------------|
 | `201 Created` | User created successfully |
-| `400 Bad Request` | Validation error or duplicate email |
+| `400 Bad Request` | Validation error, duplicate email, or `LOCAL` user missing a password (min 8 chars) |
 | `404 Not Found` | Department or role not found |
 
 ---
@@ -955,6 +960,79 @@ Retrieves all available roles.
 | departmentName| string         | Assigned department name   |
 | roleName      | string         | Assigned role name         |
 | createdAt     | LocalDateTime  | Account creation timestamp |
+
+---
+
+# OAuth2 Login Module (Google & Microsoft)
+
+Users are provisioned by an ADMIN/MANAGER with a `loginMethod` of `LOCAL`, `GOOGLE`, or `MICROSOFT`. OAuth logins are **browser-redirect flows** — no `Authorization` header or JSON body is used; the user is redirected to the provider's consent screen, then back to the frontend with the result.
+
+**Providers configured** in `application.properties`:
+
+| Provider   | Registration ID | Status         |
+|------------|-----------------|----------------|
+| Google     | `google`        | Keys configured |
+| Microsoft  | `microsoft`     | Keys are placeholders (pending setup) |
+
+## Login Flow
+
+1. The frontend navigates the browser to the initiation endpoint (below).
+2. Spring Security redirects to the provider's consent screen.
+3. On success the provider redirects to the callback URL. The `CustomOAuth2Service` validates the account, then `OAuth2LoginSuccessHandler` issues a JWT.
+4. The browser is redirected to:
+
+```
+{app.frontend-redirect-url}?token=<jwt>
+```
+
+i.e. `http://localhost:5173/oauth2/redirect?token=<jwt>`
+
+5. On failure (unknown account, login-method mismatch, disabled account, or provider error) the browser is redirected to:
+
+```
+{app.frontend-redirect-url}?error=<url-encoded reason>
+```
+
+## Endpoints
+
+### 1. Initiate Google Login
+
+```
+GET /oauth2/authorization/google
+```
+
+Opens the Google OAuth consent flow. Browser-only (302 redirects). Requires a pre-provisioned user whose `loginMethod` is `GOOGLE`.
+
+### 2. Initiate Microsoft Login
+
+```
+GET /oauth2/authorization/microsoft
+```
+
+Opens the Microsoft Entra ID consent flow. Browser-only (302 redirects). Requires a pre-provisioned user whose `loginMethod` is `MICROSOFT`.
+
+### 3. OAuth Callback (handled internally)
+
+```
+GET /login/oauth2/code/{registrationId}
+```
+
+Not called directly. This is the registered redirect URI for each provider: `http://localhost:8080/login/oauth2/code/google` and `http://localhost:8080/login/oauth2/code/microsoft`.
+
+## Account Validation (server side)
+
+During the callback, `CustomOAuth2Service`:
+
+- Resolves the user by the provider email (`email`, or `preferred_username` for Microsoft).
+- Rejects the login (`OAuth2AuthenticationException`) if the account does not exist, was provisioned with a different `loginMethod`, or is inactive.
+- **Never creates accounts** — all users must be provisioned by an ADMIN/MANAGER first.
+
+## Frontend Configuration
+
+| Property                    | Value                                     |
+|-----------------------------|-------------------------------------------|
+| `app.frontend-url`          | `http://localhost:5173`                   |
+| `app.frontend-redirect-url` | `http://localhost:5173/oauth2/redirect`   |
 
 ---
 

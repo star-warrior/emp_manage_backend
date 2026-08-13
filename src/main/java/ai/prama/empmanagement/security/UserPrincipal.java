@@ -1,6 +1,7 @@
 package ai.prama.empmanagement.security;
 
 import ai.prama.empmanagement.entity.User;
+import ai.prama.empmanagement.enums.LoginMethod;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -53,6 +54,8 @@ public class UserPrincipal implements UserDetails {
     public boolean isEnabled() {
         return user.isActive();
     }
+
+    public LoginMethod getLoginMethod() {return  user.getLoginMethod();}
 
     public User getUser() {
         return user;
